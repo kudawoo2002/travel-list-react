@@ -1,17 +1,33 @@
 import { useState } from "react";
 
-const initialItems = [
-  { id: 1, description: "Passports", quantity: 2, packed: false },
-  { id: 2, description: "Socks", quantity: 12, packed: false },
-  { id: 3, description: "Charger", quantity: 1, packed: true },
-];
-
 export default function App() {
+  const [items, setItems] = useState([]);
+  function handleAddItems(item) {
+    setItems((items) => [...items, item]);
+  }
+
+  function handleDelItem(id) {
+    setItems((items) => items.filter((item) => item.id !== id));
+  }
+
+  function handChangeItem(id) {
+    setItems((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, packed: !item.packed } : item
+      )
+    );
+  }
+
   return (
     <div className="app">
       <Logo />
-      <Form />
-      <PackagingList />
+      <Form onAddItems={handleAddItems} />
+      <PackagingList
+        items={items}
+        onDeleteItem={handleDelItem}
+        onToggleItem={handChangeItem}
+      />
+
       <Stats />
     </div>
   );
@@ -21,7 +37,7 @@ function Logo() {
   return <h1>🌴 Far Away 💼</h1>;
 }
 
-function Form() {
+function Form({ onAddItems }) {
   const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState(1);
 
@@ -37,6 +53,8 @@ function Form() {
     console.log(newItemObj);
     setDescription("");
     setQuantity(1);
+
+    onAddItems(newItemObj);
   }
   return (
     <form className="add-form" onSubmit={handleSubmit}>
@@ -63,24 +81,36 @@ function Form() {
   );
 }
 
-function PackagingList() {
+function PackagingList({ items, onDeleteItem, onToggleItem }) {
   return (
     <div className="list">
       <ul>
-        {initialItems.map((item) => (
-          <Item itemobj={item} key={item.id} />
+        {items.map((item) => (
+          <Item
+            itemobj={item}
+            key={item.id}
+            onDeleteItem={onDeleteItem}
+            onToggleItem={onToggleItem}
+          />
         ))}
       </ul>
     </div>
   );
 }
-function Item({ itemobj }) {
+function Item({ itemobj, onDeleteItem, onToggleItem }) {
   return (
     <li>
+      <input
+        type="checkbox"
+        value={itemobj.packed}
+        onChange={() => {
+          onToggleItem(itemobj.id);
+        }}
+      />
       <span style={itemobj.packed ? { textDecoration: "line-through" } : {}}>
         {itemobj.quantity} {itemobj.description}
       </span>
-      <button>❌</button>
+      <button onClick={() => onDeleteItem(itemobj.id)}>❌</button>
     </li>
   );
 }
